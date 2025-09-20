@@ -15,3 +15,8 @@ export const getModuleByIdApi= (id)=>{
   return api.get(`/module/get-module-by-id/${id}`);
 }
 
+
+export const deleteModuleApi =(id)=>{
+  return api.put(`/module/delete/${id}`);
+
+}

@@ -14,18 +14,25 @@ import {
   Award,
   Target,
   Zap,
+  X,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { setCredentials, setUser } from "../reducers/authSlice";
 import { toast } from "react-toastify";
-import { loginApi } from "../services/authService";
+import { forgotPasswordApi, loginApi } from "../services/authService";
+
 const LoginPage = ({ setCurrentPage = () => {} }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [currentStat, setCurrentStat] = useState(0);
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  
+  // Forgot Password Modal States
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   const stats = [
     { number: "50K+", label: "Active Students", icon: Users },
@@ -61,7 +68,6 @@ const LoginPage = ({ setCurrentPage = () => {} }) => {
     }));
      toast.success("Login successful! 🎉");
      navigate('/admin');
-      // console.log("Login successful:", res.data);
     } catch (error) {
       console.error("Login failed:", error.response?.data || error.message);
       alert("Invalid credentials!");
@@ -70,6 +76,42 @@ const LoginPage = ({ setCurrentPage = () => {} }) => {
 
   const clickHandler = () => {
     navigate("/register");
+  };
+const handleForgotSubmit = async () => {
+  if (!forgotEmail) return;
+
+  setIsLoading(true);
+
+  try {
+    // API call to trigger email
+    await forgotPasswordApi({ email: forgotEmail });
+
+    setIsLoading(false);
+    setIsSubmitted(true);
+    toast.success("Reset link sent to your email!");
+    
+    // Ab frontend ko token ko handle karne ki zarurat nahi, user email me click karega
+  } catch (error) {
+    setIsLoading(false);
+    toast.error(error.response?.data?.message || "Failed to send reset link");
+  }
+};
+
+
+
+  // Forgot Password Modal Functions
+  const openModal = () => setIsModalOpen(true);
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setForgotEmail("");
+    setIsSubmitted(false);
+  };
+
+  
+  const handleOverlayClick = (e) => {
+    if (e.target === e.currentTarget) {
+      closeModal();
+    }
   };
 
   return (
@@ -148,7 +190,7 @@ const LoginPage = ({ setCurrentPage = () => {} }) => {
                   <input
                     type="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)} // ✅
+                    onChange={(e) => setEmail(e.target.value)}
                     className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500"
                     placeholder="Enter your email"
                   />
@@ -163,7 +205,7 @@ const LoginPage = ({ setCurrentPage = () => {} }) => {
                   <input
                     type={showPassword ? "text" : "password"}
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)} // ✅
+                    onChange={(e) => setPassword(e.target.value)}
                     className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500"
                     placeholder="Enter your password"
                   />
@@ -175,6 +217,16 @@ const LoginPage = ({ setCurrentPage = () => {} }) => {
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
                 </div>
+              </div>
+
+              {/* Forgot Password Link */}
+              <div className="text-right">
+                <button
+                  onClick={openModal}
+                  className="text-indigo-600 hover:text-indigo-800 text-sm font-medium transition-colors duration-200"
+                >
+                  Forgot your password?
+                </button>
               </div>
 
               {/* Submit */}
@@ -206,6 +258,112 @@ const LoginPage = ({ setCurrentPage = () => {} }) => {
           </div>
         </div>
       </div>
+
+      {/* Forgot Password Modal */}
+      {isModalOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-200"
+          onClick={handleOverlayClick}
+        >
+          <div className="bg-white rounded-2xl w-full max-w-md transform animate-in zoom-in-95 duration-200 shadow-2xl">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-100">
+              <h2 className="text-2xl font-bold text-gray-800">
+                {isSubmitted ? 'Check Your Email' : 'Forgot Password'}
+              </h2>
+              <button
+                onClick={closeModal}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+            
+            {/* Modal Content */}
+            <div className="p-6">
+              {!isSubmitted ? (
+                <>
+                  <div className="text-center mb-6">
+                    <div className="w-16 h-16 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Mail className="w-8 h-8 text-white" />
+                    </div>
+                    <p className="text-gray-600 text-sm">
+                      Enter your email address and we'll send you a link to reset your password.
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Email Address
+                      </label>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                        <input
+                          type="email"
+                          value={forgotEmail}
+                          onChange={(e) => setForgotEmail(e.target.value)}
+                          placeholder="Enter your email address"
+                          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-gray-50 hover:bg-white"
+                        />
+                      </div>
+                    </div>
+                    
+                    <button
+                      type="button"
+                      onClick={handleForgotSubmit}
+                      disabled={isLoading || !forgotEmail}
+                      className="w-full py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-semibold rounded-xl hover:from-indigo-600 hover:to-purple-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 transition-all duration-200 shadow-lg flex items-center justify-center gap-2"
+                    >
+                      {isLoading ? (
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <>
+                          Send Reset Link
+                          <ArrowRight className="w-4 h-4" />
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-4">
+                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Mail className="w-8 h-8 text-green-500" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                    Email Sent Successfully!
+                  </h3>
+                  <p className="text-gray-600 text-sm mb-6">
+                    We've sent a password reset link to <strong>{forgotEmail}</strong>. 
+                    Please check your inbox and follow the instructions to reset your password.
+                  </p>
+                  <button
+                    onClick={closeModal}
+                    className="px-6 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-medium rounded-lg hover:from-indigo-600 hover:to-purple-600 transition-all duration-200 transform hover:scale-105"
+                  >
+                    Close
+                  </button>
+                </div>
+              )}
+            </div>
+            
+            {!isSubmitted && (
+              <div className="px-6 py-4 bg-gray-50 rounded-b-2xl">
+                <p className="text-xs text-gray-500 text-center">
+                  Remember your password?{' '}
+                  <button 
+                    onClick={closeModal}
+                    className="text-indigo-500 hover:text-indigo-600 font-medium"
+                  >
+                    Sign In
+                  </button>
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,3 +1,4 @@
+
 import { useDispatch, useSelector } from "react-redux";
 import {
   deleteAccountApi,
@@ -5,8 +6,14 @@ import {
   loginApi,
   logoutApi,
   registerApi,
+  forgotPasswordApi,
+  resetPasswordApi,
 } from "../services/authService";
-import { clearCredentials, setCredentials } from "../reducers/authSlice";
+import {
+  clearCredentials,
+  setCredentials,
+  setforgotPassword,
+} from "../reducers/authSlice";
 
 export function useAuth() {
   const dispatch = useDispatch();
@@ -26,7 +33,6 @@ export function useAuth() {
 
   const editProfile = async (payload) => {
     const data = await editProfileApi(payload);
-    console.log(data);
     dispatch(setCredentials({ ...auth, user: data.user })); // sirf user update
     return data.user;
   };
@@ -39,21 +45,37 @@ export function useAuth() {
 
   const logout = async () => {
     try {
-      await logoutApi(); 
+      await logoutApi();
     } catch (err) {
       console.warn("Logout API failed, but clearing local data");
     }
-    dispatch(clearCredentials()); 
+    dispatch(clearCredentials());
+  };
+
+  //  Forgot Password
+  const forgotPassword = async (email) => {
+    const res = await forgotPasswordApi({ email });
+    dispatch(setforgotPassword(email)); // email redux me save
+    return res.message;
+  };
+
+   const resetPassword = async ({ token, newPassword }) => {
+    const res = await resetPasswordApi({ token, newPassword });
+    return res.message; // e.g. "Password reset successful"
   };
 
   return {
     user: auth.user,
     accessToken: auth.accessToken,
     isAuthenticated: auth.isAuthenticated,
+    forgotPasswordEmail: auth.forgotPasswordEmail,
+    resetPasswordStatus: auth.resetPasswordStatus,
     login,
     register,
     logout,
     editProfile,
     deleteAccount,
+    forgotPassword,
+    resetPassword,
   };
 }

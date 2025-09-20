@@ -130,28 +130,46 @@ const CourseDetails = () => {
       });
     }
   };
+const handleDeleteLesson = async (lesson) => {
+  if (!window.confirm(`Delete lesson "${lesson.title}"?`)) return;
 
-  const handleDeleteLesson = async (lesson) => {
-  if (window.confirm(`Delete lesson "${lesson.title}"?`)) {
-    try {
-      await deleteLessonApi(lesson._id);
+  try {
+    // Backend call for deletion
+    await deleteLessonApi(lesson._id);
 
-      toast.success("Lesson deleted successfully!", { position: "top-right" });
+    toast.success("Lesson deleted successfully!", { position: "top-right" });
 
-      // course ko refresh karna hai
-      const res = await getCourseByIdApi(id);
-      setCourse(res.data.message);
+    // Directly update frontend state WITHOUT fetching course again
+    setCourse((prevCourse) => {
+      return {
+        ...prevCourse,
+        modules: prevCourse.modules.map((mod) => {
+          if (mod._id !== lesson.moduleId) return mod;
+          return {
+            ...mod,
+            lessons: mod.lessons.filter((l) => l._id !== lesson._id),
+          };
+        }),
+      };
+    });
 
-      // agar deleted lesson selected tha to null kar do
-      if (selectedLesson?._id === lesson._id) {
-        setSelectedLesson(null);
-      }
-    } catch (err) {
-      console.error("Failed to delete lesson:", err);
-      toast.error("Failed to delete lesson. Try again!", {
-        position: "top-right",
-      });
+    // Agar deleted lesson select tha to null kar do
+    if (selectedLesson?._id === lesson._id) {
+      setSelectedLesson(null);
     }
+
+    // Optional: agar module khali ho gaya to module collapse bhi kar do
+    setExpandedModules((prev) =>
+      prev.filter((modId) => {
+        const mod = course.modules.find((m) => m._id === modId);
+        return mod?.lessons.some((l) => l._id !== lesson._id);
+      })
+    );
+  } catch (err) {
+    console.error("Failed to delete lesson:", err);
+    toast.error("Failed to delete lesson. Try again!", {
+      position: "top-right",
+    });
   }
 };
 
@@ -229,7 +247,12 @@ const CourseDetails = () => {
         {/* Modules */}
         <div className="flex-1 overflow-y-auto">
           {course.modules.map((module, index) => (
-            <div key={module._id} className="border-b border-gray-100">
+            <div
+              key={module._id}
+              className={`border-b border-gray-100 ${
+                module.deleted ? "opacity-50 pointer-events-none" : ""
+              }`} // ✅ fade deleted modules + disable pointer events
+            >
               <div className="flex items-center">
                 <button
                   onClick={() => toggleModule(module._id)}
@@ -240,7 +263,15 @@ const CourseDetails = () => {
                       <span className="text-xs bg-indigo-100 text-indigo-600 px-2 py-1 rounded-full font-medium">
                         Module {index + 1}
                       </span>
+
+                      {/* ✅ Deleted badge */}
+                      {module.deleted && (
+                        <span className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded-full font-medium">
+                          Deleted
+                        </span>
+                      )}
                     </div>
+
                     <h3 className="font-semibold text-sm text-gray-800 mb-1">
                       {module.title}
                     </h3>
@@ -269,6 +300,7 @@ const CourseDetails = () => {
                 />
               </div>
 
+              {/* Lessons */}
               {expandedModules.includes(module._id) &&
                 module.lessons.map((lesson, lessonIndex) => (
                   <div key={lesson._id} className="flex items-center">

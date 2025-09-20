@@ -2,12 +2,12 @@ import api from "../api/axios";
 
   export async function refreshTokens() {
     const res = await api.post("/auth/refresh", {});
-    return res.data; // { accessToken, user }
+    return res.data; 
   }
 
   export async function loginApi({ email, password }) {
     const res = await api.post("/auth/login", { email, password });
-    return res.data; // { accessToken, user }
+    return res.data; 
   }
 
   export async function registerApi(payload) {
@@ -29,3 +29,12 @@ import api from "../api/axios";
     const res = await api.post("/auth/logout");
     return res.data;
   }
+
+export async function forgotPasswordApi(email){
+  const res = await api.post('/auth/forgot-password',email);
+  return res.data;
+}
+export async function resetPasswordApi({ token, newPassword }) {
+  const res = await api.post(`/auth/reset-password/${token}`, { newPassword });
+  return res.data;
+}

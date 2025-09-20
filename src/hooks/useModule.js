@@ -51,6 +51,18 @@ export function useModules() {
   }
 };
 
+ const softDeleteAction = async (id) => {
+    try {
+      dispatch(setLoading(true));
+      const res = await deleteModuleApi(id);
+      dispatch(softDeleteModule(res.data)); // update state with soft deleted module
+      toast.success("Module deleted successfully!");
+    } catch (err) {
+      dispatch(setError(err.message));
+      toast.error("Failed to delete module!");
+    }
+  };
+
   // Reset state
   const resetModules = () => dispatch(clearModules());
 
@@ -62,5 +74,6 @@ export function useModules() {
     createModule,
     resetModules,
     updateModuleAction,
+    softDeleteAction,
   };
 }

@@ -9,15 +9,13 @@ import { clearCredentials, setUser } from "../reducers/authSlice";
 import { useNavigate } from "react-router-dom";
 import DynamicTable from "../components/DynamicTable";
 import { getAllUsers } from "../services/usersService";
-import DetailModal from "../components/DetailModal";
 import CreateModuleForm from "../components/CreateModule";
 import CourseForm from "../components/CreateCourseForm";
 import CoursesDisplay from "../components/CourseDisplay";
 import CreateLessonForm from "../components/CreateLessons";
-import { getModulesApi, updateModuleApi } from "../services/moduleService";
+import { deleteModuleApi, getModulesApi, updateModuleApi } from "../services/moduleService";
 import AllLessonsList from "../components/AllLessons";
 import { useInstructors } from "../hooks/useInstructors"; 
-import { getCourseByIdApi } from "../services/courseServices";
 
 const AdminPanel = () => {
   const dispatch = useDispatch();
@@ -90,6 +88,7 @@ const AdminPanel = () => {
     const fetchModules = async () => {
       try {
         const res = await getModulesApi();
+        console.log(res)
         const moduleData = res.data?.message || res.message || [];
         if (mounted) setModules(moduleData);
       } catch (err) {
@@ -137,6 +136,17 @@ const handleEditModule = async (id, payload) => {
       await deleteAccountApi();
       dispatch(clearCredentials());
       toast.success("Account deleted successfully!");
+    } catch (err) {
+      toast.error("Failed to delete account!");
+    }
+  };
+
+   const handleDeleteModule = async (module) => {
+    // console.log(module._id);
+    try {
+       await deleteModuleApi(module._id);
+      dispatch(clearCredentials());
+      toast.success("Module deleted successfully!");
     } catch (err) {
       toast.error("Failed to delete account!");
     }
@@ -226,15 +236,17 @@ const handleEditModule = async (id, payload) => {
           {activeTab === "modules" && <CreateModuleForm />}
           {activeTab === "lessons" && <CreateLessonForm modules={modules} />}
           {activeTab === "allModules" && (
-            <DynamicTable columns={moduleColumns} data={modules} onRowClick={handleRowClick} onEdit={handleEditModule} />
+            <DynamicTable columns={moduleColumns} data={modules} onRowClick={handleRowClick} onEdit={handleEditModule} onDelete={handleDeleteModule} />
           )}
           {activeTab === "users" && (
             <DynamicTable
               columns={userColumns}
               data={users}
               type="user"
+              currentUserRole={admin.role}
               onMakeInstructor={handleMakeInstructor}
               onRowClick={handleRowClick}
+
             />
           )}
           {activeTab === "instructors" && (
@@ -242,6 +254,7 @@ const handleEditModule = async (id, payload) => {
               columns={instructorColumns}
               data={instructors}
               type="instructor"
+              currentUserRole={admin.role}
               onMakeInstructor={handleRemoveInstructor} // remove button
               onRowClick={handleRowClick}
             />

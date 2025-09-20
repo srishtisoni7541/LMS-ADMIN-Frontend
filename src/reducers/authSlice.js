@@ -7,6 +7,8 @@ const initialState = {
   user: JSON.parse(localStorage.getItem(USER_KEY)) || null,
   accessToken: localStorage.getItem(ACCESS_KEY) || null,
   isAuthenticated: !!localStorage.getItem(ACCESS_KEY),
+  forgotPasswordEmail: null,
+  resetPasswordStatus: null,
 };
 
 const authSlice = createSlice({
@@ -29,6 +31,13 @@ const authSlice = createSlice({
       }
     },
 
+    setforgotPassword(state, action) {
+      state.forgotPasswordEmail = action.payload; // email save
+    },
+     resetPassword(state, action) {
+      state.resetPasswordStatus = action.payload.status;
+    },
+
     clearCredentials(state) {
       state.user = null;
       state.accessToken = null;
@@ -44,5 +53,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { setCredentials, clearCredentials, setUser } = authSlice.actions;
+export const { setCredentials,setforgotPassword, clearCredentials, setUser } = authSlice.actions;
 export default authSlice.reducer;
