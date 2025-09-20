@@ -38,6 +38,19 @@ export function useModules() {
     }
   };
 
+
+  const updateModuleAction = async (id, payload) => {
+  try {
+    dispatch(setLoading(true));
+    const res = await updateModuleApi(id, payload);
+    dispatch(updateModule(res.data));
+    toast.success("Module updated successfully!");
+  } catch (err) {
+    dispatch(setError(err.message));
+    toast.error("Failed to update module!");
+  }
+};
+
   // Reset state
   const resetModules = () => dispatch(clearModules());
 
@@ -48,5 +61,6 @@ export function useModules() {
     loadModules,
     createModule,
     resetModules,
+    updateModuleAction,
   };
 }

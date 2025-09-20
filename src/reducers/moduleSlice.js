@@ -20,6 +20,14 @@ const moduleSlice = createSlice({
       state.loading = false;
       state.error = null;
     },
+    updateModule(state, action) {
+      const updatedModule = action.payload;
+      state.list = state.list.map((m) =>
+        m._id === updatedModule._id ? updatedModule : m
+      );
+      state.loading = false;
+      state.error = null;
+    },
     setLoading(state, action) {
       state.loading = action.payload;
     },
@@ -35,6 +43,6 @@ const moduleSlice = createSlice({
   },
 });
 
-export const { setModules, addModule, setLoading, setError, clearModules } =
+export const { setModules, addModule,updateModule, setLoading, setError, clearModules } =
   moduleSlice.actions;
 export default moduleSlice.reducer;

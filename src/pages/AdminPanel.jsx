@@ -14,9 +14,10 @@ import CreateModuleForm from "../components/CreateModule";
 import CourseForm from "../components/CreateCourseForm";
 import CoursesDisplay from "../components/CourseDisplay";
 import CreateLessonForm from "../components/CreateLessons";
-import { getModulesApi } from "../services/moduleService";
+import { getModulesApi, updateModuleApi } from "../services/moduleService";
 import AllLessonsList from "../components/AllLessons";
 import { useInstructors } from "../hooks/useInstructors"; 
+import { getCourseByIdApi } from "../services/courseServices";
 
 const AdminPanel = () => {
   const dispatch = useDispatch();
@@ -31,6 +32,8 @@ const AdminPanel = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { instructors, loadInstructors, promoteToInstructor, demoteToStudent } = useInstructors();
+  
+  
 
   const handleRowClick = (row) => {
     setSelectedItem(row);
@@ -106,6 +109,28 @@ const AdminPanel = () => {
       toast.error("Failed to update profile!");
     }
   };
+
+
+
+
+const handleEditModule = async (id, payload) => {
+  try {
+    // Module update backend me
+    await updateModuleApi(id, payload); 
+    toast.success("Module updated successfully!");
+
+    // Fetch all modules again (latest)
+    const res = await getModulesApi(); 
+    const moduleData = res.data?.message || res.message || [];
+
+    // Redux/State update
+    setModules(moduleData);
+
+  } catch (err) {
+    console.error(err);
+    toast.error("Failed to update module!");
+  }
+};
 
   const handleDelete = async () => {
     try {
@@ -201,7 +226,7 @@ const AdminPanel = () => {
           {activeTab === "modules" && <CreateModuleForm />}
           {activeTab === "lessons" && <CreateLessonForm modules={modules} />}
           {activeTab === "allModules" && (
-            <DynamicTable columns={moduleColumns} data={modules} onRowClick={handleRowClick} />
+            <DynamicTable columns={moduleColumns} data={modules} onRowClick={handleRowClick} onEdit={handleEditModule} />
           )}
           {activeTab === "users" && (
             <DynamicTable

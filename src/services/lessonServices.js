@@ -21,12 +21,30 @@ export const getLessonsByModuleApi = async (moduleId) => {
 
 // Soft delete lesson
 export const softDeleteLessonApi = async (lessonId) => {
-  const response = await api.delete(`lesson/delete/${lessonId}`);
+  const response = await api.delete(`/lesson/delete/${lessonId}`);
   return response.data;
 };
 
-// Update lesson (basic info, not file)
+
+
+
+
 export const updateLessonApi = async (lessonId, data) => {
-  const response = await api.put(`lesson/update/${lessonId}`, data);
+  const formData = new FormData();
+  formData.append("title", data.title);
+  formData.append("type", data.type);
+  formData.append("order", data.order);
+  formData.append("duration", data.duration);
+
+  if (data.file) formData.append("file", data.file);
+  if (data.contentUrl) formData.append("contentUrl", data.contentUrl);
+
+  const response = await api.put(`/lesson/update-lesson/${lessonId}`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
   return response.data;
+};
+
+export const deleteLessonApi = (lessonId) => {
+  return api.delete(`/lesson/delete/${lessonId}`);
 };

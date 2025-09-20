@@ -12,7 +12,7 @@ export const getCoursesApi = () => {
 };
 
 export const getCourseByIdApi = (id) => {
-  console.log(id);
+  // console.log(id);
   return api.get(`/courses/get-course/${id}`);
 };
 
