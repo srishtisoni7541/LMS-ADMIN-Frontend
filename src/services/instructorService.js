@@ -9,3 +9,8 @@ export async function makeInstructor (id){
     const res = await api.post(`/instructor/make-instructor/${id}`);
     return res.data;
 }
+export async function removeInstructor(id) {
+    const res= await api.post(`/instructor/remove-instructor/${id}`);
+    return res.data;
+    
+}

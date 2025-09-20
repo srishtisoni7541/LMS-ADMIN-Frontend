@@ -25,7 +25,8 @@ export function useCourses() {
     try {
       dispatch(setLoading(true));
       const res = await getCoursesApi();
-      dispatch(setCourses(res.data.data)); 
+      // console.log(res.data?.message);
+      dispatch(setCourses(res.data?.message)); 
     } catch (err) {
       dispatch(setError(err.message));
       toast.error("Failed to fetch courses!");

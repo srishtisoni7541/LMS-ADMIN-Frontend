@@ -4,6 +4,7 @@ const initialState = {
   list: [],
   loading: false,
   error: null,
+  deletedCourses: [], // Track deleted course IDs
 };
 
 const courseSlice = createSlice({
@@ -25,7 +26,7 @@ const courseSlice = createSlice({
       if (index !== -1) state.list[index] = action.payload;
     },
     removeCourse(state, action) {
-      state.list = state.list.filter(c => c._id !== action.payload);
+      state.deletedCourses.push(action.payload);
     },
     setLoading(state, action) {
       state.loading = action.payload;

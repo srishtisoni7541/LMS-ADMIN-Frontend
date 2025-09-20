@@ -1,8 +1,9 @@
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useCourses } from "../hooks/useCourses";
 import { toast } from "react-toastify";
 import { getAllInstructors } from "../services/instructorService";
+import LoaderModal from "./LoaderModal";
 
 const CourseForm = () => {
   const { createCourse, loading: courseLoading } = useCourses();
@@ -16,7 +17,7 @@ const CourseForm = () => {
     description: "",
     instructor: "",
     price: "",
-    thumbnail: null, // file type
+    thumbnail: null, 
     category: "",
   });
 
@@ -26,7 +27,7 @@ const CourseForm = () => {
       setInstructorLoading(true);
       try {
         const res = await getAllInstructors();
-        console.log("Instructors fetched:", res);
+        // console.log("Instructors fetched:", res);
         if (mounted) setInstructors(Array.isArray(res.message) ? res.message : []);
       } catch (err) {
         console.error(err);
@@ -91,9 +92,7 @@ const CourseForm = () => {
 
       {/* Show loading text at top */}
       {courseLoading && (
-        <p className="text-blue-600 font-semibold text-center">
-          Creating course, please wait...
-        </p>
+        <LoaderModal message="Creating..."/>
       )}
 
       <input

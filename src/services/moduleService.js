@@ -5,5 +5,5 @@ export const createModuleApi = (payload) => {
 };
 
 export const getModulesApi = () => {
-  return api.get("/modules");
+  return api.get("/module/all-modules");
 };

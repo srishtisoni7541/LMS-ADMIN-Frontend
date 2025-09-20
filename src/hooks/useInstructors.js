@@ -7,7 +7,8 @@ import {
   updateInstructor,
   addInstructor,
 } from "../reducers/instructorSlice";
-import { getAllInstructors } from "../services/instructorService";
+import { getAllInstructors, removeInstructor } from "../services/instructorService";
+import { makeInstructor as makeInstructorApi } from "../services/instructorService"; // missing import
 
 export function useInstructors() {
   const dispatch = useDispatch();
@@ -18,9 +19,11 @@ export function useInstructors() {
     try {
       dispatch(setLoading(true));
       const res = await getAllInstructors();
-      dispatch(setInstructors(res.data));
+      dispatch(setInstructors(Array.isArray(res.message) ? res.message : []));
     } catch (err) {
-      dispatch(setError(err.message));
+      dispatch(setError(err.message || "Failed to load instructors"));
+    } finally {
+      dispatch(setLoading(false));
     }
   };
 
@@ -28,18 +31,38 @@ export function useInstructors() {
   const promoteToInstructor = async (userId) => {
     try {
       dispatch(setLoading(true));
-      const res = await makeInstructorApi(userId); 
+      const res = await makeInstructorApi(userId);
       const updatedUser = res.data;
 
-      // Agar response instructor hai to list me push/update
+      // List me update/add
       if (list.some((u) => u._id === updatedUser._id)) {
         dispatch(updateInstructor(updatedUser));
       } else {
         dispatch(addInstructor(updatedUser));
       }
+
       return updatedUser;
     } catch (err) {
-      dispatch(setError(err.message));
+      dispatch(setError(err.message || "Failed to promote"));
+      throw err;
+    } finally {
+      dispatch(setLoading(false));
+    }
+  };
+
+  // Demote Instructor -> Student
+  const demoteToStudent = async (userId) => {
+    try {
+      dispatch(setLoading(true));
+      await removeInstructor(userId); // API call to remove instructor
+
+      // Remove from instructors list in Redux
+      const updatedList = list.filter((inst) => inst._id !== userId);
+      dispatch(setInstructors(updatedList));
+
+      return userId;
+    } catch (err) {
+      dispatch(setError(err.message || "Failed to demote"));
       throw err;
     } finally {
       dispatch(setLoading(false));
@@ -54,6 +77,7 @@ export function useInstructors() {
     error,
     loadInstructors,
     promoteToInstructor,
+    demoteToStudent,
     resetInstructors,
   };
 }
