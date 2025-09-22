@@ -61,6 +61,36 @@ const AdminPanel = () => {
     useInstructors();
   const { addNewCertificate, selectCertificate } = useCertificate();
 
+  // Update Module
+  const handleUpdateModule = async (id, payload) => {
+    try {
+      const res = await updateModuleApi(id, payload);
+      const updatedModule = res.data.data;
+
+      setModules((prev) =>
+        prev.map((m) => (m._id === id ? { ...m, ...updatedModule } : m))
+      );
+
+      toast.success("Module updated successfully!");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to update module!");
+    }
+  };
+
+  // Delete Module
+  const handleDeleteModule = async (row) => {
+    try {
+      await deleteModuleApi(row._id);
+
+      setModules((prev) => prev.filter((m) => m._id !== row._id));
+
+      toast.success("Module deleted successfully!");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to delete module!");
+    }
+  };
   const handleRowClick = (row) => {
     setSelectedItem(row);
     setIsModalOpen(true);
@@ -194,7 +224,9 @@ const AdminPanel = () => {
       const updated = await promoteToInstructor(user._id);
       toast.success(`${updated.name} promoted to instructor`);
       setUsers(
-        users.map((u) => (u._id === user._id ? { ...u, role: "instructor" } : u))
+        users.map((u) =>
+          u._id === user._id ? { ...u, role: "instructor" } : u
+        )
       );
     } catch (err) {
       toast.error("Failed to promote instructor");
@@ -206,7 +238,9 @@ const AdminPanel = () => {
       await demoteToStudent(instructor._id);
       toast.success(`${instructor.name} removed from instructors`);
       setUsers(
-        users.map((u) => (u._id === instructor._id ? { ...u, role: "student" } : u))
+        users.map((u) =>
+          u._id === instructor._id ? { ...u, role: "student" } : u
+        )
       );
     } catch (err) {
       toast.error("Failed to remove instructor");
@@ -349,6 +383,8 @@ const AdminPanel = () => {
               columns={moduleColumns}
               data={modules}
               onRowClick={handleRowClick}
+              onEdit={handleUpdateModule}
+              onDelete={handleDeleteModule}
             />
           )}
           {activeTab === "users" && (
