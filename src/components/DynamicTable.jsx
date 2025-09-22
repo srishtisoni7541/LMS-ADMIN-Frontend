@@ -97,15 +97,74 @@ const DynamicTable = ({
 
                   {/* Actions */}
                   <td className="border border-gray-300 px-4 py-2 flex gap-2">
-                    {/* Student/User actions */}
-                    {!isDeleted &&
-                      (row.role === "student" || row.role === "user") && (
-                        <>
+                    {type === "cancelRequest" ? (
+                      // Cancel Requests Actions
+                      <>
+                        <button
+                          className="px-2 py-1 rounded bg-green-500 hover:bg-green-600 text-white"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onCancelApprove && onCancelApprove(row);
+                          }}
+                        >
+                          Approve
+                        </button>
+                        <button
+                          className="px-2 py-1 rounded bg-red-500 hover:bg-red-600 text-white"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onCancelReject && onCancelReject(row);
+                          }}
+                        >
+                          Cancel
+                        </button>
+                      </>
+                    ) : (
+                      // Default Actions for Modules / Users / Certificates
+                      <>
+                        {/* Student/User actions */}
+                        {!isDeleted &&
+                          (row.role === "student" || row.role === "user") && (
+                            <>
+                              <button
+                                className={`px-2 py-1 rounded text-white ${
+                                  currentUserRole === "instructor"
+                                    ? "bg-gray-400 cursor-not-allowed"
+                                    : "bg-blue-500 hover:bg-blue-600"
+                                }`}
+                                disabled={currentUserRole === "instructor"}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onMakeInstructor && onMakeInstructor(row);
+                                }}
+                              >
+                                Make Instructor
+                              </button>
+                              <button
+                                className={`px-2 py-1 rounded text-white ${
+                                  currentUserRole === "instructor"
+                                    ? "bg-gray-400 cursor-not-allowed"
+                                    : "bg-green-500 hover:bg-green-600"
+                                }`}
+                                disabled={currentUserRole === "instructor"}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onGenerateCertificate &&
+                                    onGenerateCertificate(row);
+                                }}
+                              >
+                                Generate Certificate
+                              </button>
+                            </>
+                          )}
+
+                        {/* Instructor actions */}
+                        {!isDeleted && row.role === "instructor" && (
                           <button
                             className={`px-2 py-1 rounded text-white ${
                               currentUserRole === "instructor"
                                 ? "bg-gray-400 cursor-not-allowed"
-                                : "bg-blue-500 hover:bg-blue-600"
+                                : "bg-red-500 hover:bg-red-600"
                             }`}
                             disabled={currentUserRole === "instructor"}
                             onClick={(e) => {
@@ -113,120 +172,86 @@ const DynamicTable = ({
                               onMakeInstructor && onMakeInstructor(row);
                             }}
                           >
-                            Make Instructor
+                            Remove Instructor
                           </button>
+                        )}
 
-                          <button
-                            className={`px-2 py-1 rounded text-white ${
-                              currentUserRole === "instructor"
-                                ? "bg-gray-400 cursor-not-allowed"
-                                : "bg-green-500 hover:bg-green-600"
-                            }`}
-                            disabled={currentUserRole === "instructor"}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onGenerateCertificate(row);
-                            }}
-                          >
-                            Generate Certificate
-                          </button>
-                        </>
-                      )}
+                        {/* Certificates / Modules */}
+                        {!isDeleted && row.certificateContent && (
+                          <>
+                            <button
+                              className="px-2 py-1 rounded bg-yellow-500 hover:bg-yellow-600 text-white"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedRow(row);
+                                setModalMode("edit");
+                                setModalType("certificate");
+                                setIsModalOpen(true);
+                              }}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              className="px-2 py-1 rounded bg-red-500 hover:bg-red-600 text-white"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onDelete && onDelete(row);
+                              }}
+                            >
+                              Delete
+                            </button>
+                            <button
+                              className="px-2 py-1 rounded bg-green-500 hover:bg-green-600 text-white"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedRow(row);
+                                setModalMode("view");
+                                setModalType("certificate");
+                                setIsModalOpen(true);
+                              }}
+                            >
+                              Read
+                            </button>
+                          </>
+                        )}
 
-                    {/* Instructor actions */}
-                    {!isDeleted && row.role === "instructor" && (
-                      <button
-                        className={`px-2 py-1 rounded text-white ${
-                          currentUserRole === "instructor"
-                            ? "bg-gray-400 cursor-not-allowed"
-                            : "bg-red-500 hover:bg-red-600"
-                        }`}
-                        disabled={currentUserRole === "instructor"}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onMakeInstructor && onMakeInstructor(row);
-                        }}
-                      >
-                        Remove Instructor
-                      </button>
-                    )}
-
-                    {/* Certificates actions (same as module) */}
-                    {!isDeleted && row.certificateContent && (
-                      <>
-                        <button
-                          className="px-2 py-1 rounded bg-yellow-500 hover:bg-yellow-600 text-white"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedRow(row);
-                            setModalMode("edit");
-                            setModalType("certificate");
-                            setIsModalOpen(true);
-                          }}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          className="px-2 py-1 rounded bg-red-500 hover:bg-red-600 text-white"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onDelete && onDelete(row);
-                          }}
-                        >
-                          Delete
-                        </button>
-
-                        <button
-                          className="px-2 py-1 rounded bg-green-500 hover:bg-green-600 text-white"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedRow(row);
-                            setModalMode("view");
-                            setModalType("certificate");
-                            setIsModalOpen(true);
-                          }}
-                        >
-                          Read
-                        </button>
-                      </>
-                    )}
-
-                    {/* Default actions (modules / others) */}
-                    {!isDeleted && !row.role && !row.certificateContent && (
-                      <>
-                        <button
-                          className="px-2 py-1 rounded bg-yellow-500 hover:bg-yellow-600 text-white"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedRow(row);
-                            setModalMode("edit");
-                            setModalType("module");
-                            setIsModalOpen(true);
-                          }}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          className="px-2 py-1 rounded bg-red-500 hover:bg-red-600 text-white"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onDelete && onDelete(row);
-                          }}
-                        >
-                          Delete
-                        </button>
-
-                        <button
-                          className="px-2 py-1 rounded bg-green-500 hover:bg-green-600 text-white"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedRow(row);
-                            setModalMode("view");
-                            setIsModalOpen(true);
-                          }}
-                        >
-                          Read
-                        </button>
+                        {!isDeleted && !row.role && !row.certificateContent && (
+                          <>
+                            <button
+                              className="px-2 py-1 rounded bg-yellow-500 hover:bg-yellow-600 text-white"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedRow(row);
+                                setModalMode("edit");
+                                setModalType("module");
+                                setIsModalOpen(true);
+                              }}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              className="px-2 py-1 rounded bg-red-500 hover:bg-red-600 text-white"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onDelete && onDelete(row);
+                              }}
+                            >
+                              Delete
+                            </button>
+                            <button
+                              className="px-2 py-1 rounded bg-green-500 hover:bg-green-600 text-white"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedRow(row);
+                                setModalMode("view");
+                                setModalType("module");
+                                setIsModalOpen(true);
+                              }}
+                            >
+                              Read
+                            </button>
+                          </>
+                        )}
                       </>
                     )}
                   </td>

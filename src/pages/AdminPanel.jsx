@@ -28,7 +28,6 @@ import CreateLessonForm from "../components/CreateLessons";
 import {
   getCertificatesApi,
   issueCertificateApi,
-
 } from "../services/certificateService";
 import { useCertificate } from "../hooks/useCertificate";
 import {
@@ -38,7 +37,11 @@ import {
 } from "../services/moduleService";
 import AllLessonsList from "../components/AllLessons";
 import { useInstructors } from "../hooks/useInstructors";
-import Certificate from "../components/CertificateModal";
+import {
+  getCancelEnrollReqApi,
+  approveCancelReqApi,
+  rejectCancelReqApi,
+} from "../services/enrollService";
 
 const AdminPanel = () => {
   const dispatch = useDispatch();
@@ -49,52 +52,67 @@ const AdminPanel = () => {
   const [showProfile, setShowProfile] = useState(false);
   const [users, setUsers] = useState([]);
   const [modules, setModules] = useState([]);
+  const [certificates, setCertificates] = useState([]);
+  const [cancelRequests, setCancelRequests] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { instructors, loadInstructors, promoteToInstructor, demoteToStudent } =
     useInstructors();
+  const { addNewCertificate, selectCertificate } = useCertificate();
 
   const handleRowClick = (row) => {
     setSelectedItem(row);
     setIsModalOpen(true);
   };
 
-  // AdminPanel ke andar:
-  const { addNewCertificate, selectCertificate } = useCertificate();
-  const [certificates, setCertificates] = useState([]);
+  // Fetch Cancel Requests
+  useEffect(() => {
+    if (activeTab !== "cancelRequests") return;
+    let mounted = true;
 
-  const handleGenerateCertificate = async (row) => {
-    const firstCourseId = row.enrolledCoursesDetails?.[0]?._id;
-    if (!firstCourseId) {
-      toast.error("No enrolled course found for this student");
-      return;
-    }
+    const fetchCancelRequests = async () => {
+      try {
+        const res = await getCancelEnrollReqApi();
+        console.log(res);
+        if (mounted) setCancelRequests(res.data?.data || []);
+      } catch (err) {
+        toast.error("Failed to fetch cancel requests!");
+      }
+    };
 
+    fetchCancelRequests();
+    return () => (mounted = false);
+  }, [activeTab]);
+
+  // Cancel Request Approve / Reject
+  const handleApproveCancel = async (request) => {
     try {
-      const res = await issueCertificateApi({
-        student: row._id,
-        course: firstCourseId,
-      });
-
-      const certificate = res.data.data;
-      addNewCertificate(certificate);
-      selectCertificate(certificate);
-      toast.success("Certificate generated successfully!");
+      await approveCancelReqApi(request._id);
+      toast.success("Cancel request approved!");
+      setCancelRequests(cancelRequests.filter((r) => r._id !== request._id));
     } catch (err) {
-      console.error("Certificate creation failed:", err);
-      toast.error("Failed to generate certificate!");
+      toast.error("Failed to approve cancel request!");
     }
   };
 
-  // Certificates tab ke liye fetch
+  const handleRejectCancel = async (request) => {
+    try {
+      await rejectCancelReqApi(request._id);
+      toast.success("Cancel request rejected!");
+      setCancelRequests(cancelRequests.filter((r) => r._id !== request._id));
+    } catch (err) {
+      toast.error("Failed to reject cancel request!");
+    }
+  };
+
+  // Certificates fetch
   useEffect(() => {
     if (activeTab !== "certificates") return;
     let mounted = true;
     const fetchCertificates = async () => {
       try {
         const res = await getCertificatesApi();
-        console.log(res);
         if (mounted) setCertificates(res.data.data || []);
       } catch (err) {
         toast.error("Failed to fetch certificates!");
@@ -104,36 +122,7 @@ const AdminPanel = () => {
     return () => (mounted = false);
   }, [activeTab]);
 
-  const handleMakeInstructor = async (user) => {
-    try {
-      const updated = await promoteToInstructor(user._id);
-      toast.success(`${updated.name} promoted to instructor`);
-      // users list update
-      setUsers(
-        users.map((u) =>
-          u._id === user._id ? { ...u, role: "instructor" } : u
-        )
-      );
-    } catch (err) {
-      toast.error("Failed to promote instructor");
-    }
-  };
-
-  const handleRemoveInstructor = async (instructor) => {
-    try {
-      await demoteToStudent(instructor._id);
-      toast.success(`${instructor.name} removed from instructors`);
-      // users list update
-      setUsers(
-        users.map((u) =>
-          u._id === instructor._id ? { ...u, role: "student" } : u
-        )
-      );
-    } catch (err) {
-      toast.error("Failed to remove instructor");
-    }
-  };
-
+  // Users fetch
   useEffect(() => {
     if (activeTab !== "users") return;
     let mounted = true;
@@ -142,14 +131,11 @@ const AdminPanel = () => {
       try {
         const res = await getAllUsers();
         const fetchedUsers = res.data || [];
-
         const usersWithCourses = fetchedUsers.map((user) => ({
           ...user,
-          // map the actual courses array returned from API
           enrolledCoursesList:
             user.enrolledCoursesDetails?.map((c) => c.title) || [],
         }));
-
         if (mounted) setUsers(usersWithCourses);
       } catch (err) {
         toast.error("Failed to fetch users!");
@@ -160,19 +146,19 @@ const AdminPanel = () => {
     return () => (mounted = false);
   }, [activeTab]);
 
-  // Fetch Instructors
+  // Instructors fetch
   useEffect(() => {
     if (activeTab !== "instructors") return;
     loadInstructors();
   }, [activeTab]);
 
+  // Modules fetch
   useEffect(() => {
     if (!["lessons", "allModules"].includes(activeTab)) return;
     let mounted = true;
     const fetchModules = async () => {
       try {
         const res = await getModulesApi();
-        // console.log(res)
         const moduleData = res.data?.message || res.message || [];
         if (mounted) setModules(moduleData);
       } catch (err) {
@@ -182,6 +168,50 @@ const AdminPanel = () => {
     fetchModules();
     return () => (mounted = false);
   }, [activeTab]);
+
+  const handleGenerateCertificate = async (row) => {
+    const firstCourseId = row.enrolledCoursesDetails?.[0]?._id;
+    if (!firstCourseId) {
+      toast.error("No enrolled course found for this student");
+      return;
+    }
+    try {
+      const res = await issueCertificateApi({
+        student: row._id,
+        course: firstCourseId,
+      });
+      const certificate = res.data.data;
+      addNewCertificate(certificate);
+      selectCertificate(certificate);
+      toast.success("Certificate generated successfully!");
+    } catch (err) {
+      toast.error("Failed to generate certificate!");
+    }
+  };
+
+  const handleMakeInstructor = async (user) => {
+    try {
+      const updated = await promoteToInstructor(user._id);
+      toast.success(`${updated.name} promoted to instructor`);
+      setUsers(
+        users.map((u) => (u._id === user._id ? { ...u, role: "instructor" } : u))
+      );
+    } catch (err) {
+      toast.error("Failed to promote instructor");
+    }
+  };
+
+  const handleRemoveInstructor = async (instructor) => {
+    try {
+      await demoteToStudent(instructor._id);
+      toast.success(`${instructor.name} removed from instructors`);
+      setUsers(
+        users.map((u) => (u._id === instructor._id ? { ...u, role: "student" } : u))
+      );
+    } catch (err) {
+      toast.error("Failed to remove instructor");
+    }
+  };
 
   const handleEdit = async (payload) => {
     try {
@@ -193,40 +223,11 @@ const AdminPanel = () => {
     }
   };
 
-  const handleEditModule = async (id, payload) => {
-    try {
-      // Module update backend me
-      await updateModuleApi(id, payload);
-      toast.success("Module updated successfully!");
-
-      // Fetch all modules again (latest)
-      const res = await getModulesApi();
-      const moduleData = res.data?.message || res.message || [];
-
-      // Redux/State update
-      setModules(moduleData);
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to update module!");
-    }
-  };
-
   const handleDelete = async () => {
     try {
       await deleteAccountApi();
       dispatch(clearCredentials());
       toast.success("Account deleted successfully!");
-    } catch (err) {
-      toast.error("Failed to delete account!");
-    }
-  };
-
-  const handleDeleteModule = async (module) => {
-    // console.log(module._id);
-    try {
-      await deleteModuleApi(module._id);
-      dispatch(clearCredentials());
-      toast.success("Module deleted successfully!");
     } catch (err) {
       toast.error("Failed to delete account!");
     }
@@ -257,6 +258,11 @@ const AdminPanel = () => {
     },
   ];
 
+  const cancelRequestColumns = [
+    { key: "studentName", label: "Student Name" },
+    { key: "courseTitle", label: "Course Title" },
+  ];
+
   const instructorColumns = [
     { key: "name", label: "Name" },
     { key: "email", label: "Email" },
@@ -280,6 +286,7 @@ const AdminPanel = () => {
     { key: "users", label: "Fetch Users", icon: <Users /> },
     { key: "certificates", label: "Certificates" },
     { key: "instructors", label: "Instructors", icon: <GraduationCap /> },
+    { key: "cancelRequests", label: "Cancel Requests" },
   ];
 
   return (
@@ -328,13 +335,20 @@ const AdminPanel = () => {
           {activeTab === "courses" && <CourseForm />}
           {activeTab === "modules" && <CreateModuleForm />}
           {activeTab === "lessons" && <CreateLessonForm modules={modules} />}
+          {activeTab === "cancelRequests" && (
+            <DynamicTable
+              columns={cancelRequestColumns}
+              data={cancelRequests}
+              type="cancelRequest"
+              onCancelApprove={handleApproveCancel}
+              onCancelReject={handleRejectCancel}
+            />
+          )}
           {activeTab === "allModules" && (
             <DynamicTable
               columns={moduleColumns}
               data={modules}
               onRowClick={handleRowClick}
-              onEdit={handleEditModule}
-              onDelete={handleDeleteModule}
             />
           )}
           {activeTab === "users" && (
@@ -342,7 +356,6 @@ const AdminPanel = () => {
               columns={userColumns}
               data={users}
               type="user"
-              courses={users.map((u) => u.enrolledCoursesList)}
               currentUserRole={admin.role}
               onMakeInstructor={handleMakeInstructor}
               onRowClick={handleRowClick}
@@ -355,7 +368,7 @@ const AdminPanel = () => {
               data={instructors}
               type="instructor"
               currentUserRole={admin.role}
-              onMakeInstructor={handleRemoveInstructor} // remove button
+              onMakeInstructor={handleRemoveInstructor}
               onRowClick={handleRowClick}
             />
           )}
