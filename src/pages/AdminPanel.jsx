@@ -1,10 +1,22 @@
 import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { User, BookOpen, Users, GraduationCap, PlusCircle, BookHeadphones, Eye } from "lucide-react";
+import {
+  User,
+  BookOpen,
+  Users,
+  GraduationCap,
+  PlusCircle,
+  BookHeadphones,
+  Eye,
+} from "lucide-react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import ProfileModal from "../components/ProfileModal";
-import { editProfileApi, deleteAccountApi, logoutApi } from "../services/authService";
+import {
+  editProfileApi,
+  deleteAccountApi,
+  logoutApi,
+} from "../services/authService";
 import { clearCredentials, setUser } from "../reducers/authSlice";
 import { useNavigate } from "react-router-dom";
 import DynamicTable from "../components/DynamicTable";
@@ -13,9 +25,20 @@ import CreateModuleForm from "../components/CreateModule";
 import CourseForm from "../components/CreateCourseForm";
 import CoursesDisplay from "../components/CourseDisplay";
 import CreateLessonForm from "../components/CreateLessons";
-import { deleteModuleApi, getModulesApi, updateModuleApi } from "../services/moduleService";
+import {
+  getCertificatesApi,
+  issueCertificateApi,
+
+} from "../services/certificateService";
+import { useCertificate } from "../hooks/useCertificate";
+import {
+  deleteModuleApi,
+  getModulesApi,
+  updateModuleApi,
+} from "../services/moduleService";
 import AllLessonsList from "../components/AllLessons";
-import { useInstructors } from "../hooks/useInstructors"; 
+import { useInstructors } from "../hooks/useInstructors";
+import Certificate from "../components/CertificateModal";
 
 const AdminPanel = () => {
   const dispatch = useDispatch();
@@ -29,21 +52,68 @@ const AdminPanel = () => {
   const [selectedItem, setSelectedItem] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const { instructors, loadInstructors, promoteToInstructor, demoteToStudent } = useInstructors();
-  
-  
+  const { instructors, loadInstructors, promoteToInstructor, demoteToStudent } =
+    useInstructors();
 
   const handleRowClick = (row) => {
     setSelectedItem(row);
     setIsModalOpen(true);
   };
 
+  // AdminPanel ke andar:
+  const { addNewCertificate, selectCertificate } = useCertificate();
+  const [certificates, setCertificates] = useState([]);
+
+  const handleGenerateCertificate = async (row) => {
+    const firstCourseId = row.enrolledCoursesDetails?.[0]?._id;
+    if (!firstCourseId) {
+      toast.error("No enrolled course found for this student");
+      return;
+    }
+
+    try {
+      const res = await issueCertificateApi({
+        student: row._id,
+        course: firstCourseId,
+      });
+
+      const certificate = res.data.data;
+      addNewCertificate(certificate);
+      selectCertificate(certificate);
+      toast.success("Certificate generated successfully!");
+    } catch (err) {
+      console.error("Certificate creation failed:", err);
+      toast.error("Failed to generate certificate!");
+    }
+  };
+
+  // Certificates tab ke liye fetch
+  useEffect(() => {
+    if (activeTab !== "certificates") return;
+    let mounted = true;
+    const fetchCertificates = async () => {
+      try {
+        const res = await getCertificatesApi();
+        console.log(res);
+        if (mounted) setCertificates(res.data.data || []);
+      } catch (err) {
+        toast.error("Failed to fetch certificates!");
+      }
+    };
+    fetchCertificates();
+    return () => (mounted = false);
+  }, [activeTab]);
+
   const handleMakeInstructor = async (user) => {
     try {
       const updated = await promoteToInstructor(user._id);
       toast.success(`${updated.name} promoted to instructor`);
       // users list update
-      setUsers(users.map((u) => u._id === user._id ? { ...u, role: "instructor" } : u));
+      setUsers(
+        users.map((u) =>
+          u._id === user._id ? { ...u, role: "instructor" } : u
+        )
+      );
     } catch (err) {
       toast.error("Failed to promote instructor");
     }
@@ -54,24 +124,38 @@ const AdminPanel = () => {
       await demoteToStudent(instructor._id);
       toast.success(`${instructor.name} removed from instructors`);
       // users list update
-      setUsers(users.map((u) => u._id === instructor._id ? { ...u, role: "student" } : u));
+      setUsers(
+        users.map((u) =>
+          u._id === instructor._id ? { ...u, role: "student" } : u
+        )
+      );
     } catch (err) {
       toast.error("Failed to remove instructor");
     }
   };
 
-  // Fetch Users
   useEffect(() => {
     if (activeTab !== "users") return;
     let mounted = true;
+
     const fetchUsers = async () => {
       try {
         const res = await getAllUsers();
-        if (mounted) setUsers(res.data || []);
+        const fetchedUsers = res.data || [];
+
+        const usersWithCourses = fetchedUsers.map((user) => ({
+          ...user,
+          // map the actual courses array returned from API
+          enrolledCoursesList:
+            user.enrolledCoursesDetails?.map((c) => c.title) || [],
+        }));
+
+        if (mounted) setUsers(usersWithCourses);
       } catch (err) {
         toast.error("Failed to fetch users!");
       }
     };
+
     fetchUsers();
     return () => (mounted = false);
   }, [activeTab]);
@@ -88,7 +172,7 @@ const AdminPanel = () => {
     const fetchModules = async () => {
       try {
         const res = await getModulesApi();
-        console.log(res)
+        // console.log(res)
         const moduleData = res.data?.message || res.message || [];
         if (mounted) setModules(moduleData);
       } catch (err) {
@@ -109,27 +193,23 @@ const AdminPanel = () => {
     }
   };
 
+  const handleEditModule = async (id, payload) => {
+    try {
+      // Module update backend me
+      await updateModuleApi(id, payload);
+      toast.success("Module updated successfully!");
 
+      // Fetch all modules again (latest)
+      const res = await getModulesApi();
+      const moduleData = res.data?.message || res.message || [];
 
-
-const handleEditModule = async (id, payload) => {
-  try {
-    // Module update backend me
-    await updateModuleApi(id, payload); 
-    toast.success("Module updated successfully!");
-
-    // Fetch all modules again (latest)
-    const res = await getModulesApi(); 
-    const moduleData = res.data?.message || res.message || [];
-
-    // Redux/State update
-    setModules(moduleData);
-
-  } catch (err) {
-    console.error(err);
-    toast.error("Failed to update module!");
-  }
-};
+      // Redux/State update
+      setModules(moduleData);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to update module!");
+    }
+  };
 
   const handleDelete = async () => {
     try {
@@ -141,10 +221,10 @@ const handleEditModule = async (id, payload) => {
     }
   };
 
-   const handleDeleteModule = async (module) => {
+  const handleDeleteModule = async (module) => {
     // console.log(module._id);
     try {
-       await deleteModuleApi(module._id);
+      await deleteModuleApi(module._id);
       dispatch(clearCredentials());
       toast.success("Module deleted successfully!");
     } catch (err) {
@@ -167,6 +247,14 @@ const handleEditModule = async (id, payload) => {
     { key: "name", label: "Name" },
     { key: "email", label: "Email" },
     { key: "role", label: "Role" },
+    {
+      key: "enrolledAt",
+      label: "Enrolled In",
+      render: (user) =>
+        user.enrolledCoursesList.length > 0
+          ? user.enrolledCoursesList.join(", ")
+          : "No courses",
+    },
   ];
 
   const instructorColumns = [
@@ -190,6 +278,7 @@ const handleEditModule = async (id, payload) => {
     { key: "lessons", label: "Create Lessons", icon: <PlusCircle /> },
     { key: "fetchLessons", label: "Fetch Lessons", icon: <BookOpen /> },
     { key: "users", label: "Fetch Users", icon: <Users /> },
+    { key: "certificates", label: "Certificates" },
     { key: "instructors", label: "Instructors", icon: <GraduationCap /> },
   ];
 
@@ -202,7 +291,9 @@ const handleEditModule = async (id, payload) => {
             <button
               key={key}
               className={`flex items-center gap-3 w-full p-2 rounded-lg transition-colors duration-200 ${
-                activeTab === key ? "bg-indigo-100 text-indigo-600" : "hover:bg-gray-100 text-gray-700"
+                activeTab === key
+                  ? "bg-indigo-100 text-indigo-600"
+                  : "hover:bg-gray-100 text-gray-700"
               }`}
               onClick={() => setActiveTab(key)}
             >
@@ -227,7 +318,9 @@ const handleEditModule = async (id, payload) => {
           {activeTab === "dashboard" && (
             <div>
               <h2 className="text-xl font-bold">Welcome to Admin Dashboard</h2>
-              <p className="text-gray-600 mt-2">Select an option from the sidebar to get started.</p>
+              <p className="text-gray-600 mt-2">
+                Select an option from the sidebar to get started.
+              </p>
             </div>
           )}
 
@@ -236,17 +329,24 @@ const handleEditModule = async (id, payload) => {
           {activeTab === "modules" && <CreateModuleForm />}
           {activeTab === "lessons" && <CreateLessonForm modules={modules} />}
           {activeTab === "allModules" && (
-            <DynamicTable columns={moduleColumns} data={modules} onRowClick={handleRowClick} onEdit={handleEditModule} onDelete={handleDeleteModule} />
+            <DynamicTable
+              columns={moduleColumns}
+              data={modules}
+              onRowClick={handleRowClick}
+              onEdit={handleEditModule}
+              onDelete={handleDeleteModule}
+            />
           )}
           {activeTab === "users" && (
             <DynamicTable
               columns={userColumns}
               data={users}
               type="user"
+              courses={users.map((u) => u.enrolledCoursesList)}
               currentUserRole={admin.role}
               onMakeInstructor={handleMakeInstructor}
               onRowClick={handleRowClick}
-
+              onGenerateCertificate={handleGenerateCertificate}
             />
           )}
           {activeTab === "instructors" && (
@@ -260,6 +360,17 @@ const handleEditModule = async (id, payload) => {
             />
           )}
           {activeTab === "fetchLessons" && <AllLessonsList />}
+          {activeTab === "certificates" && (
+            <DynamicTable
+              columns={[
+                { key: "studentName", label: "Student" },
+                { key: "courseTitle", label: "Course" },
+                { key: "issuedAt", label: "Issued At" },
+              ]}
+              data={certificates}
+              type="certificate"
+            />
+          )}
         </div>
       </main>
 

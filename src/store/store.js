@@ -5,6 +5,7 @@ import instructorReducer from '../../src/reducers/instructorSlice';
 import moduleReducer from '../../src/reducers/moduleSlice';
 import courseReducer from '../../src/reducers/userSlice';
 import lessonReducer from  '../../src/reducers/lessonSlice';
+import certificateReducer from '../../src/reducers/certificateSlice';
 
 
  const store = configureStore({
@@ -15,6 +16,7 @@ import lessonReducer from  '../../src/reducers/lessonSlice';
     modules:moduleReducer,
     courses:courseReducer,
     lessons:lessonReducer,
+    certificates:certificateReducer,
   },
 });
 export default store;
