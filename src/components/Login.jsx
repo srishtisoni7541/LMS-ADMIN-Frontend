@@ -27,7 +27,9 @@ const LoginPage = ({ setCurrentPage = () => {} }) => {
   const [currentStat, setCurrentStat] = useState(0);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  
+  const [isLoginLoading, setIsLoginLoading] = useState(false);
+
+
   // Forgot Password Modal States
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
@@ -42,10 +44,26 @@ const LoginPage = ({ setCurrentPage = () => {} }) => {
   ];
 
   const features = [
-    { icon: Play, title: "Interactive Learning", desc: "Engaging video content with real-time feedback" },
-    { icon: Award, title: "Certified Courses", desc: "Industry-recognized certificates upon completion" },
-    { icon: Target, title: "Personalized Path", desc: "AI-powered learning recommendations" },
-    { icon: Zap, title: "Fast Progress", desc: "Learn at your own pace with smart scheduling" },
+    {
+      icon: Play,
+      title: "Interactive Learning",
+      desc: "Engaging video content with real-time feedback",
+    },
+    {
+      icon: Award,
+      title: "Certified Courses",
+      desc: "Industry-recognized certificates upon completion",
+    },
+    {
+      icon: Target,
+      title: "Personalized Path",
+      desc: "AI-powered learning recommendations",
+    },
+    {
+      icon: Zap,
+      title: "Fast Progress",
+      desc: "Learn at your own pace with smart scheduling",
+    },
   ];
 
   useEffect(() => {
@@ -59,45 +77,73 @@ const LoginPage = ({ setCurrentPage = () => {} }) => {
   const dispatch = useDispatch();
 
   const loginHandler = async () => {
+    if (!email || !password) {
+      toast.error("Please enter email and password");
+      return;
+    }
+
+    setIsLoginLoading(true);
+
     try {
-      const res = await loginApi({password,email});
-      dispatch(setUser(res.data)); 
-       dispatch(setCredentials  ({
-      user: res.data.user,
-      accessToken: res.data.accessToken,
-    }));
-     toast.success("Login successful! 🎉");
-     navigate('/admin');
+      const res = await loginApi({ password, email });
+      dispatch(setUser(res.data));
+      dispatch(
+        setCredentials({
+          user: res.data.user,
+          accessToken: res.data.accessToken,
+        })
+      );
+
+      toast.success("Login successful! 🎉");
+      navigate("/admin");
     } catch (error) {
       console.error("Login failed:", error.response?.data || error.message);
-      alert("Invalid credentials!");
+      toast.error("Invalid credentials!");
+    } finally {
+      setIsLoginLoading(false);
     }
   };
+
+  // const loginHandler = async () => {
+  //   try {
+  //     const res = await loginApi({ password, email });
+  //     dispatch(setUser(res.data));
+  //     dispatch(
+  //       setCredentials({
+  //         user: res.data.user,
+  //         accessToken: res.data.accessToken,
+  //       })
+  //     );
+  //     toast.success("Login successful! 🎉");
+  //     navigate("/admin");
+  //   } catch (error) {
+  //     console.error("Login failed:", error.response?.data || error.message);
+  //     alert("Invalid credentials!");
+  //   }
+  // };
 
   const clickHandler = () => {
     navigate("/register");
   };
-const handleForgotSubmit = async () => {
-  if (!forgotEmail) return;
+  const handleForgotSubmit = async () => {
+    if (!forgotEmail) return;
 
-  setIsLoading(true);
+    setIsLoading(true);
 
-  try {
-    // API call to trigger email
-    await forgotPasswordApi({ email: forgotEmail });
+    try {
+      // API call to trigger email
+      await forgotPasswordApi({ email: forgotEmail });
 
-    setIsLoading(false);
-    setIsSubmitted(true);
-    toast.success("Reset link sent to your email!");
-    
-    // Ab frontend ko token ko handle karne ki zarurat nahi, user email me click karega
-  } catch (error) {
-    setIsLoading(false);
-    toast.error(error.response?.data?.message || "Failed to send reset link");
-  }
-};
+      setIsLoading(false);
+      setIsSubmitted(true);
+      toast.success("Reset link sent to your email!");
 
-
+      // Ab frontend ko token ko handle karne ki zarurat nahi, user email me click karega
+    } catch (error) {
+      setIsLoading(false);
+      toast.error(error.response?.data?.message || "Failed to send reset link");
+    }
+  };
 
   // Forgot Password Modal Functions
   const openModal = () => setIsModalOpen(true);
@@ -107,7 +153,6 @@ const handleForgotSubmit = async () => {
     setIsSubmitted(false);
   };
 
-  
   const handleOverlayClick = (e) => {
     if (e.target === e.currentTarget) {
       closeModal();
@@ -165,7 +210,9 @@ const handleForgotSubmit = async () => {
                 className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10 hover:bg-white/10 transition-all duration-300 hover:scale-105"
               >
                 <feature.icon className="h-8 w-8 text-indigo-400 mb-3" />
-                <h3 className="text-white font-semibold mb-2">{feature.title}</h3>
+                <h3 className="text-white font-semibold mb-2">
+                  {feature.title}
+                </h3>
                 <p className="text-gray-400 text-sm">{feature.desc}</p>
               </div>
             ))}
@@ -176,15 +223,21 @@ const handleForgotSubmit = async () => {
         <div className="flex-1 lg:max-w-md xl:max-w-lg flex items-center justify-center p-8">
           <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl w-full p-8 border border-white/20">
             <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h2>
-              <p className="text-gray-600">Sign in to continue your learning journey</p>
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                Welcome Back
+              </h2>
+              <p className="text-gray-600">
+                Sign in to continue your learning journey
+              </p>
             </div>
 
             {/* Login Form */}
             <div className="space-y-6">
               {/* Email */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Email Address
+                </label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                   <input
@@ -199,7 +252,9 @@ const handleForgotSubmit = async () => {
 
               {/* Password */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Password
+                </label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                   <input
@@ -214,7 +269,11 @@ const handleForgotSubmit = async () => {
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
                   >
-                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    {showPassword ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
                   </button>
                 </div>
               </div>
@@ -243,7 +302,10 @@ const handleForgotSubmit = async () => {
             <div className="mt-8 text-center">
               <p className="text-gray-600">
                 Don't have an account?{" "}
-                <button onClick={clickHandler} className="text-indigo-600 font-semibold hover:underline">
+                <button
+                  onClick={clickHandler}
+                  className="text-indigo-600 font-semibold hover:underline"
+                >
                   Sign up
                 </button>
               </p>
@@ -261,7 +323,7 @@ const handleForgotSubmit = async () => {
 
       {/* Forgot Password Modal */}
       {isModalOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-200"
           onClick={handleOverlayClick}
         >
@@ -269,7 +331,7 @@ const handleForgotSubmit = async () => {
             {/* Modal Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-100">
               <h2 className="text-2xl font-bold text-gray-800">
-                {isSubmitted ? 'Check Your Email' : 'Forgot Password'}
+                {isSubmitted ? "Check Your Email" : "Forgot Password"}
               </h2>
               <button
                 onClick={closeModal}
@@ -278,7 +340,7 @@ const handleForgotSubmit = async () => {
                 <X className="w-5 h-5 text-gray-500" />
               </button>
             </div>
-            
+
             {/* Modal Content */}
             <div className="p-6">
               {!isSubmitted ? (
@@ -288,10 +350,11 @@ const handleForgotSubmit = async () => {
                       <Mail className="w-8 h-8 text-white" />
                     </div>
                     <p className="text-gray-600 text-sm">
-                      Enter your email address and we'll send you a link to reset your password.
+                      Enter your email address and we'll send you a link to
+                      reset your password.
                     </p>
                   </div>
-                  
+
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -308,7 +371,7 @@ const handleForgotSubmit = async () => {
                         />
                       </div>
                     </div>
-                    
+
                     <button
                       type="button"
                       onClick={handleForgotSubmit}
@@ -335,8 +398,9 @@ const handleForgotSubmit = async () => {
                     Email Sent Successfully!
                   </h3>
                   <p className="text-gray-600 text-sm mb-6">
-                    We've sent a password reset link to <strong>{forgotEmail}</strong>. 
-                    Please check your inbox and follow the instructions to reset your password.
+                    We've sent a password reset link to{" "}
+                    <strong>{forgotEmail}</strong>. Please check your inbox and
+                    follow the instructions to reset your password.
                   </p>
                   <button
                     onClick={closeModal}
@@ -347,16 +411,22 @@ const handleForgotSubmit = async () => {
                 </div>
               )}
             </div>
-            
+
             {!isSubmitted && (
               <div className="px-6 py-4 bg-gray-50 rounded-b-2xl">
                 <p className="text-xs text-gray-500 text-center">
-                  Remember your password?{' '}
-                  <button 
-                    onClick={closeModal}
-                    className="text-indigo-500 hover:text-indigo-600 font-medium"
+                  Remember your password?{" "}
+                  <button
+                    type="button"
+                    className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 rounded-xl font-semibold hover:scale-105 transition flex items-center justify-center gap-2"
+                    onClick={loginHandler}
+                    disabled={isLoginLoading}
                   >
-                    Sign In
+                    {isLoginLoading ? (
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      "Sign In"
+                    )}
                   </button>
                 </p>
               </div>

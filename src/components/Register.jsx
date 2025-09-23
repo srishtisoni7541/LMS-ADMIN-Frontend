@@ -24,6 +24,8 @@ const RegisterPage = ({ setCurrentPage = () => {} }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [currentBenefit, setCurrentBenefit] = useState(0);
+  const [isRegisterLoading, setIsRegisterLoading] = useState(false);
+
   const navigate = useNavigate();
   const [form, setForm] = useState({
     name: "",
@@ -99,11 +101,14 @@ const RegisterPage = ({ setCurrentPage = () => {} }) => {
   }, []);
 
   const { register } = useAuth();
+
   async function handleRegister() {
     if (form.password !== form.confirmPassword) {
       toast.error("Passwords do not match!");
       return;
     }
+
+    setIsRegisterLoading(true);
 
     try {
       const data = await register({
@@ -116,9 +121,32 @@ const RegisterPage = ({ setCurrentPage = () => {} }) => {
       setTimeout(() => navigate("/login"), 2000);
     } catch (err) {
       console.error(err.response?.data || err.message);
-      toast.error(" Registration failed!");
+      toast.error("Registration failed!");
+    } finally {
+      setIsRegisterLoading(false);
     }
   }
+
+  // async function handleRegister() {
+  //   if (form.password !== form.confirmPassword) {
+  //     toast.error("Passwords do not match!");
+  //     return;
+  //   }
+
+  //   try {
+  //     const data = await register({
+  //       name: form.name,
+  //       email: form.email,
+  //       password: form.password,
+  //     });
+
+  //     toast.success("🎉 Registered successfully!");
+  //     setTimeout(() => navigate("/login"), 2000);
+  //   } catch (err) {
+  //     console.error(err.response?.data || err.message);
+  //     toast.error(" Registration failed!");
+  //   }
+  // }
 
   return (
     <div className="min-h-screen w-full px-30 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
@@ -359,12 +387,25 @@ const RegisterPage = ({ setCurrentPage = () => {} }) => {
 
               <button
                 type="button"
+                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-xl font-semibold hover:shadow-xl hover:shadow-purple-500/25 transform hover:scale-105 transition-all duration-300 relative overflow-hidden flex items-center justify-center gap-2"
+                onClick={handleRegister}
+                disabled={isRegisterLoading}
+              >
+                {isRegisterLoading ? (
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  "Create Account"
+                )}
+              </button>
+
+              {/* <button
+                type="button"
                 className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-xl font-semibold hover:shadow-xl hover:shadow-purple-500/25 transform hover:scale-105 transition-all duration-300 relative overflow-hidden"
                 onClick={handleRegister}
               >
                 <span className="relative z-10">Create Account</span>
                 <div className="absolute inset-0 bg-gradient-to-r from-pink-600 to-purple-600 opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
-              </button>
+              </button> */}
             </div>
 
             {/* Divider */}

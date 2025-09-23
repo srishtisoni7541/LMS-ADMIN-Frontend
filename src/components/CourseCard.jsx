@@ -1,4 +1,3 @@
-import React from 'react';
 import { BookOpen, Users, Clock, Star, Edit, Trash2, Eye } from "lucide-react";
 
 const CourseCard = ({ course, onEdit, onDelete, onView, isDeleted }) => {

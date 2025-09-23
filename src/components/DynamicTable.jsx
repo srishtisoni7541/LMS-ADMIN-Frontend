@@ -292,7 +292,7 @@ const DynamicTable = ({
         </div>
       )}
       {/* Loader Modal */}
-      {isLoading && <LoaderModal message="Generating Certificate..." />}
+      {isLoading && <LoaderModal message="Fetching Data..." />}
     </div>
   );
 };

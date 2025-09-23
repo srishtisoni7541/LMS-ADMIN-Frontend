@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { getAllLessonsApi } from "../services/lessonServices";
+import Loader from "./Loader";
 
 const AllLessonsList = () => {
   const [lessons, setLessons] = useState([]);
@@ -28,7 +29,7 @@ const AllLessonsList = () => {
   }, []);
 
   if (loading)
-    return <p className="text-center text-gray-500 mt-10">Loading lessons...</p>;
+     <Loader/>
   if (error)
     return <p className="text-center text-red-500 mt-10">{error}</p>;
 
