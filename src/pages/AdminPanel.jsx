@@ -319,14 +319,19 @@ const AdminPanel = () => {
     { key: "lessons", label: "Create Lessons", icon: <PlusCircle /> },
     { key: "fetchLessons", label: "Fetch Lessons", icon: <BookOpen /> },
     { key: "users", label: "Fetch Users", icon: <Users /> },
-    { key: "certificates", label: "Certificates",icon:<GraduationCap/> },
+    { key: "certificates", label: "Certificates", icon: <GraduationCap /> },
     { key: "instructors", label: "Instructors", icon: <GraduationCap /> },
-    { key: "cancelRequests", label: "Cancel Requests", icon: <AlertTriangle /> },
+    {
+      key: "cancelRequests",
+      label: "Cancel Requests",
+      icon: <AlertTriangle />,
+    },
   ];
 
   return (
     <div className="flex h-screen w-full bg-gray-100">
-      <aside className="w-64 bg-white shadow-lg p-5 space-y-6">
+      {/* Sidebar */}
+      <aside className="w-64 bg-white shadow-lg p-5 space-y-6 hidden md:block">
         <h2 className="text-2xl font-bold text-indigo-600">Admin Panel</h2>
         <nav className="space-y-4">
           {sidebarItems.map(({ key, label, icon }) => (
@@ -345,22 +350,45 @@ const AdminPanel = () => {
         </nav>
       </aside>
 
-      <main className="flex-1 p-6 relative">
+      {/* Mobile Sidebar */}
+      <aside className="md:hidden fixed bottom-0 left-0 right-0 bg-white shadow-lg z-50 overflow-x-auto">
+        <div className="flex gap-6 justify-start space-x-4 px-2 py-2 whitespace-nowrap">
+          {sidebarItems.map(({ key, label, icon }) => (
+            <button
+              key={key}
+              className={`flex flex-col items-center text-xs min-w-[60px] ${
+                activeTab === key ? "text-indigo-600" : "text-gray-600"
+              }`}
+              onClick={() => setActiveTab(key)}
+            >
+              {icon}
+              <span className="mt-1">{label}</span>
+            </button>
+          ))}
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <main className="flex-1 p-4 md:p-6 relative overflow-y-auto">
         <div className="flex justify-end items-center gap-4 mb-6">
-          <span className="font-semibold">{admin?.name}</span>
+          <span className="font-semibold text-sm md:text-base">
+            {admin?.name}
+          </span>
           <button
-            className="w-10 h-10 rounded-full bg-indigo-500 text-white flex items-center justify-center hover:bg-indigo-600 transition-colors duration-200"
+            className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-indigo-500 text-white flex items-center justify-center hover:bg-indigo-600 transition-colors duration-200"
             onClick={() => setShowProfile(true)}
           >
-            <User />
+            <User className="h-4 w-4 md:h-5 md:w-5" />
           </button>
         </div>
 
-        <div className="bg-white shadow-lg rounded-xl p-6 min-h-[70vh]">
+        <div className="bg-white shadow-lg rounded-xl p-4 md:p-6 min-h-[70vh]">
           {activeTab === "dashboard" && (
             <div>
-              <h2 className="text-xl font-bold">Welcome to Admin Dashboard</h2>
-              <p className="text-gray-600 mt-2">
+              <h2 className="text-lg md:text-xl font-bold">
+                Welcome to Admin Dashboard
+              </h2>
+              <p className="text-gray-600 mt-2 text-sm md:text-base">
                 Select an option from the sidebar to get started.
               </p>
             </div>
