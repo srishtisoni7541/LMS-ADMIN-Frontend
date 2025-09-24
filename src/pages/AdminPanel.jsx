@@ -8,6 +8,7 @@ import {
   PlusCircle,
   BookHeadphones,
   Eye,
+  AlertTriangle,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -318,9 +319,9 @@ const AdminPanel = () => {
     { key: "lessons", label: "Create Lessons", icon: <PlusCircle /> },
     { key: "fetchLessons", label: "Fetch Lessons", icon: <BookOpen /> },
     { key: "users", label: "Fetch Users", icon: <Users /> },
-    { key: "certificates", label: "Certificates" },
+    { key: "certificates", label: "Certificates",icon:<GraduationCap/> },
     { key: "instructors", label: "Instructors", icon: <GraduationCap /> },
-    { key: "cancelRequests", label: "Cancel Requests" },
+    { key: "cancelRequests", label: "Cancel Requests", icon: <AlertTriangle /> },
   ];
 
   return (

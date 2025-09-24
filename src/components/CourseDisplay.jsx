@@ -22,7 +22,7 @@ const ConfirmDeleteModal = ({ isOpen, onClose, onConfirm, courseTitle }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/80 bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-xl p-6 max-w-md w-mx-4 shadow-2xl">
         <div className="flex items-center gap-3 mb-4">
           <AlertTriangle className="w-6 h-6 text-red-500" />
@@ -241,7 +241,7 @@ const CoursesDisplay = () => {
       />
 
       {/* Courses Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {filteredCourses.map((course) => {
           const isDeleted = course.isDeleted;
 

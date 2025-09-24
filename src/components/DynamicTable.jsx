@@ -285,7 +285,7 @@ const DynamicTable = ({
         />
       )}
       {selectedRow && modalType === "certificate" && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+        <div className="fixed inset-0 flex items-center justify-center bg-black/80 bg-opacity-50 z-50">
           <div className="relative bg-white rounded-lg shadow-lg max-h-[90vh] overflow-y-auto">
             <Certificate data={data} onClose={() => setIsModalOpen(false)} />
           </div>

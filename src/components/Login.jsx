@@ -29,7 +29,6 @@ const LoginPage = ({ setCurrentPage = () => {} }) => {
   const [password, setPassword] = useState("");
   const [isLoginLoading, setIsLoginLoading] = useState(false);
 
-
   // Forgot Password Modal States
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
@@ -288,13 +287,20 @@ const LoginPage = ({ setCurrentPage = () => {} }) => {
                 </button>
               </div>
 
-              {/* Submit */}
               <button
                 type="button"
-                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 rounded-xl font-semibold hover:scale-105 transition"
+                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 rounded-xl font-semibold hover:scale-105 transition flex items-center justify-center gap-2"
                 onClick={loginHandler}
+                disabled={isLoginLoading}
               >
-                Sign In
+                {isLoginLoading ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Logging in...
+                  </>
+                ) : (
+                  "Sign In"
+                )}
               </button>
             </div>
 

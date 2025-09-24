@@ -130,6 +130,7 @@ const CourseDetails = () => {
       });
     }
   };
+
 const handleDeleteLesson = async (lesson) => {
   if (!window.confirm(`Delete lesson "${lesson.title}"?`)) return;
 
@@ -251,7 +252,7 @@ const handleDeleteLesson = async (lesson) => {
               key={module._id}
               className={`border-b border-gray-100 ${
                 module.deleted ? "opacity-50 pointer-events-none" : ""
-              }`} // ✅ fade deleted modules + disable pointer events
+              }`}
             >
               <div className="flex items-center">
                 <button
@@ -264,7 +265,6 @@ const handleDeleteLesson = async (lesson) => {
                         Module {index + 1}
                       </span>
 
-                      {/* ✅ Deleted badge */}
                       {module.deleted && (
                         <span className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded-full font-medium">
                           Deleted
@@ -313,12 +313,20 @@ const handleDeleteLesson = async (lesson) => {
                       }`}
                     >
                       <div className="flex items-center gap-3">
-                        {lesson.isCompleted ? (
-                          <CheckCircle className="w-5 h-5 text-green-500" />
-                        ) : (
-                          <span className="text-xs font-medium text-gray-400">
-                            Not yet
-                          </span>
+                        {/* Video Preview */}
+                        {lesson.contentUrl && (
+                          <div className="w-12 h-8 bg-gray-200 border border-gray-300 rounded overflow-hidden flex-shrink-0">
+                            <video
+                              src={lesson.contentUrl}
+                              className="w-full h-full object-cover"
+                              muted
+                              preload="metadata"
+                            />
+                          </div>
+                        )}
+                        
+                        {lesson.isCompleted && (
+                          <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
                         )}
                         <h4 className="text-sm font-medium">
                           {lessonIndex + 1}. {lesson.title}
