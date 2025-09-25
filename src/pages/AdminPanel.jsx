@@ -13,6 +13,8 @@ import {
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import ProfileModal from "../components/ProfileModal";
+import GenerateCertificateModal from "../components/GenerateCertificateModal";
+
 import {
   editProfileApi,
   deleteAccountApi,
@@ -57,6 +59,18 @@ const AdminPanel = () => {
   const [cancelRequests, setCancelRequests] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showCertificateModal, setShowCertificateModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+
+  const handleOpenCertificateModal = (user) => {
+    setSelectedUser(user);
+    setShowCertificateModal(true);
+  };
+
+  const handleCertificateIssued = (certificate) => {
+    addNewCertificate(certificate);
+    selectCertificate(certificate);
+  };
 
   const { instructors, loadInstructors, promoteToInstructor, demoteToStudent } =
     useInstructors();
@@ -161,6 +175,7 @@ const AdminPanel = () => {
     const fetchUsers = async () => {
       try {
         const res = await getAllUsers();
+        // console.log(res);
         const fetchedUsers = res.data || [];
         const usersWithCourses = fetchedUsers.map((user) => ({
           ...user,
@@ -424,7 +439,7 @@ const AdminPanel = () => {
               currentUserRole={admin.role}
               onMakeInstructor={handleMakeInstructor}
               onRowClick={handleRowClick}
-              onGenerateCertificate={handleGenerateCertificate}
+              onGenerateCertificate={handleOpenCertificateModal}
             />
           )}
           {activeTab === "instructors" && (
@@ -459,6 +474,13 @@ const AdminPanel = () => {
           onDelete={handleDelete}
           onLogout={handleLogout}
           onClose={() => setShowProfile(false)}
+        />
+      )}
+      {showCertificateModal && selectedUser && (
+        <GenerateCertificateModal
+          user={selectedUser}
+          onClose={() => setShowCertificateModal(false)}
+          onCertificateIssued={handleCertificateIssued}
         />
       )}
     </div>
